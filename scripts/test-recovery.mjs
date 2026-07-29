@@ -159,8 +159,19 @@ class LeaseStore {
 
   renew(runId, workerId, ttl = 300) {
     const existing = this.leases.get(runId);
-    if (!existing || existing.workerInstanceId !== workerId) return null;
-    existing.leaseExpiresAt = new Date(Date.now() + ttl * 1000);
+    const now = new Date();
+
+    if (
+      !existing
+      || existing.workerInstanceId !== workerId
+      || existing.leaseExpiresAt <= now
+    ) {
+      return null;
+    }
+
+    existing.leaseExpiresAt =
+      new Date(now.getTime() + ttl * 1000);
+
     this.leases.set(runId, existing);
     return existing;
   }
