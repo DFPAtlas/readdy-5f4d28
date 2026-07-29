@@ -1,0 +1,15 @@
+node_modules/
+out/
+dist/
+.git/
+.gitignore
+.env
+.env.*
+*.md
+!README-LOCAL-DEPLOYMENT.md
+.DS_Store
+.vscode/
+.idea/
+npm-debug.log*
+docker-compose.override.yml
+supabase/

@@ -1,0 +1,128 @@
+# ============================================================
+# DFP UAT Agent — Example Docker Compose
+# ============================================================
+# Copy: cp docker-compose.example.yml docker-compose.yml
+# Customise: edit docker-compose.yml with your local paths/ports
+#
+# This example includes service placeholders for:
+#   - DFP UAT frontend
+#   - n8n workflow orchestrator
+#   - Playwright browser worker
+#   - Ollama AI
+#
+# Supabase may be:
+#   - An existing local Supabase stack
+#   - A hosted Supabase project
+#   - Added separately to the Compose network
+#
+# Do NOT put real passwords or keys in this file.
+# ============================================================
+
+services:
+  # --- DFP UAT Frontend ---
+  dfp-uat-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dfp-uat-frontend
+    ports:
+      - "3000:8080"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - VITE_PUBLIC_APP_NAME=DFP UAT Agent
+      - VITE_PUBLIC_APP_URL=http://localhost:3000
+      - VITE_PUBLIC_DEPLOYMENT_MODE=local
+      - VITE_PUBLIC_ENABLE_MOCK_UAT=false
+      - VITE_PUBLIC_UAT_API_BASE_URL=/api/uat
+      - VITE_PUBLIC_UAT_DEFAULT_MAX_PAGES=50
+      - VITE_PUBLIC_UAT_DEFAULT_MAX_ACTIONS=250
+      - VITE_PUBLIC_UAT_REQUEST_TIMEOUT_MS=30000
+      - VITE_PUBLIC_UAT_POLL_INTERVAL_MS=3000
+      - VITE_PUBLIC_UAT_ALLOW_PRODUCTION_TESTING=false
+      - VITE_PUBLIC_UAT_REQUIRE_PRODUCTION_APPROVAL=true
+      - VITE_PUBLIC_UAT_MASK_SENSITIVE_VALUES=true
+      - VITE_PUBLIC_SUPABASE_URL=${VITE_PUBLIC_SUPABASE_URL:-}
+      - VITE_PUBLIC_SUPABASE_ANON_KEY=${VITE_PUBLIC_SUPABASE_ANON_KEY:-}
+      - VITE_PUBLIC_UAT_ALLOW_AI_DISABLED_MODE=${UAT_ALLOW_AI_DISABLED_MODE:-true}
+      - VITE_PUBLIC_UAT_FAIL_RUN_WHEN_AI_OFFLINE=${UAT_FAIL_RUN_WHEN_AI_OFFLINE:-false}
+      # Server-only — used by nginx proxy at container start
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://192.168.1.92:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:14b}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dfp-uat-net
+
+  # --- n8n Workflow Orchestrator ---
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: dfp-uat-n8n
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_USER_FOLDER=/home/node/.n8n
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-change-me-to-a-random-string}
+      - N8N_API_TOKEN=${N8N_API_TOKEN:-}
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+      # Ollama AI connection — Atlas-HaL on private LAN
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://192.168.1.92:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:14b}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/.n8n/workflows
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - dfp-uat-net
+
+  # --- Playwright Browser Worker ---
+  playwright-worker:
+    image: mcr.microsoft.com/playwright:v1.52.0-jammy
+    container_name: dfp-uat-playwright
+    ports:
+      - "3100:3100"
+    environment:
+      - PLAYWRIGHT_WORKER_TOKEN=${PLAYWRIGHT_WORKER_TOKEN:-}
+      - PLAYWRIGHT_WORKER_PORT=3100
+    volumes:
+      - ./playwright-worker:/app
+    working_dir: /app
+    command: ["node", "server.js"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - dfp-uat-net
+    ipc: host
+
+  # --- Ollama AI ---
+  # REMOVED: Ollama runs on Atlas-HaL (192.168.1.92:11434), NOT on the UAT VM.
+  # The UAT VM connects to Atlas-HaL over the private LAN.
+  # Do NOT add an Ollama container to this Compose stack.
+  # Configure the connection via OLLAMA_BASE_URL in .env
+
+networks:
+  dfp-uat-net:
+    driver: bridge
+
+volumes:
+  n8n_data:

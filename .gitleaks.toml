@@ -1,0 +1,102 @@
+# ============================================================
+# Gitleaks Configuration — DFP UAT Agent
+# ============================================================
+# Scans the repository for accidentally committed secrets.
+# Only allowlisted values are known safe placeholders and the
+# documented local Ollama address (192.168.1.92:11434).
+#
+# NEVER add a real secret to this allowlist.
+# ============================================================
+
+title = "DFP UAT Agent — Gitleaks Config"
+
+[extend]
+useDefault = true
+
+# ----------------------------------------------------------
+# Allowlisted safe values
+# ----------------------------------------------------------
+[allowlist]
+  description = "Known safe placeholders and documented local addresses"
+
+  # Safe placeholder strings used in .env.example and documentation
+  [[allowlist.regexes]]
+    id = "safe-placeholder-anon-key"
+    description = "Safe anon-key placeholder in .env.example"
+    regex = '''replace-with-anon-key'''
+
+  [[allowlist.regexes]]
+    id = "safe-placeholder-service-role"
+    description = "Safe service-role placeholder in .env.example"
+    regex = '''replace-with-service-role-key'''
+
+  [[allowlist.regexes]]
+    id = "safe-placeholder-ci-anon"
+    description = "CI placeholder anon key in workflow"
+    regex = '''ci-placeholder-anon-key'''
+
+  [[allowlist.regexes]]
+    id = "safe-placeholder-ci-encryption"
+    description = "CI placeholder encryption key in workflow"
+    regex = '''ci-placeholder-encryption-key'''
+
+  [[allowlist.regexes]]
+    id = "safe-placeholder-change-me"
+    description = "Safe change-me placeholder in docker-compose"
+    regex = '''change-me-to-a-random-string'''
+
+  [[allowlist.regexes]]
+    id = "safe-placeholder-password"
+    description = "Safe password placeholder in .env.example"
+    regex = '''postgresql://postgres:password@localhost:54322/postgres'''
+
+  # Documented local Atlas-HaL address (not a real secret)
+  [[allowlist.regexes]]
+    id = "documented-atlas-hal-address"
+    description = "Documented local Atlas-HaL Ollama address in .env.example and docs"
+    regex = '''http://192\.168\.1\.92:11434'''
+
+  # Safe model name
+  [[allowlist.regexes]]
+    id = "safe-model-name"
+    description = "Documented qwen model name — not a secret"
+    regex = '''qwen2\.5:14b'''
+
+  # Local Supabase defaults (localhost — not a secret)
+  [[allowlist.regexes]]
+    id = "safe-local-supabase-api"
+    description = "Local Supabase API default in .env.example"
+    regex = '''http://localhost:54321'''
+
+  [[allowlist.regexes]]
+    id = "safe-local-supabase-db"
+    description = "Local Supabase DB default in .env.example"
+    regex = '''postgresql://postgres:postgres@localhost:54322/postgres'''
+
+  [[allowlist.regexes]]
+    id = "safe-local-supabase-studio"
+    description = "Local Supabase Studio default in .env.example"
+    regex = '''http://localhost:54323'''
+
+  # Known safe non-secret patterns in source code
+  [[allowlist.regexes]]
+    id = "safe-vite-public-patterns"
+    description = "VITE_PUBLIC_ variable references — these are by-design public"
+    regex = '''VITE_PUBLIC_[A-Z_]+'''
+
+# ----------------------------------------------------------
+# Paths to skip (justification included for each)
+# ----------------------------------------------------------
+[allowlist.paths]
+  description = "Files with no risk of real secrets"
+
+  paths = [
+    # Lockfile — no user secrets
+    "package-lock.json",
+    # Generated auto-import types — no user secrets
+    "auto-imports.d.ts",
+    # Built output (gitignored but listed for safety)
+    "out/",
+    "dist/",
+    "build/",
+  ]

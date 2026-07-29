@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-label: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* background — white/warm off-white scale */
+  --background-50: 1 0 98.5;
+  --background-100: 1 0.008 93;
+  --background-200: 1 0.012 88;
+  --background-300: 1 0.015 81;
+  --background-400: 1 0.018 72;
+  --background-500: 1 0.02 62;
+  --background-600: 1 0.02 50;
+  --background-700: 1 0.02 38;
+  --background-800: 1 0.02 26;
+  --background-900: 1 0.02 16;
+  --background-950: 1 0.02 8;
+
+  /* foreground — neutral text scale */
+  --foreground-50: 0 0 97;
+  --foreground-100: 0 0 92;
+  --foreground-200: 0 0 85;
+  --foreground-300: 0 0 75;
+  --foreground-400: 0 0 62;
+  --foreground-500: 0 0 48;
+  --foreground-600: 0 0 38;
+  --foreground-700: 0 0 28;
+  --foreground-800: 0 0 18;
+  --foreground-900: 0 0 12;
+  --foreground-950: 0 0 6;
+
+  /* primary — mineral blue (anchor #496989) */
+  --primary-50: 0.88 0.015 250;
+  --primary-100: 0.82 0.03 248;
+  --primary-200: 0.76 0.045 246;
+  --primary-300: 0.68 0.06 244;
+  --primary-400: 0.58 0.078 240;
+  --primary-500: 0.49 0.09 236;
+  --primary-600: 0.42 0.082 234;
+  --primary-700: 0.34 0.068 232;
+  --primary-800: 0.26 0.05 230;
+  --primary-900: 0.18 0.032 228;
+  --primary-950: 0.12 0.02 226;
+
+  /* accent — muted teal for secondary emphasis */
+  --accent-50: 0.92 0.015 180;
+  --accent-100: 0.86 0.03 178;
+  --accent-200: 0.80 0.045 176;
+  --accent-300: 0.72 0.058 174;
+  --accent-400: 0.62 0.072 170;
+  --accent-500: 0.52 0.082 168;
+  --accent-600: 0.44 0.07 166;
+  --accent-700: 0.36 0.056 164;
+  --accent-800: 0.28 0.042 162;
+  --accent-900: 0.20 0.028 160;
+  --accent-950: 0.13 0.018 158;
+
+  /* secondary — warm stone for quiet panels */
+  --secondary-50: 0.96 0.006 80;
+  --secondary-100: 0.91 0.012 78;
+  --secondary-200: 0.86 0.018 76;
+  --secondary-300: 0.78 0.024 74;
+  --secondary-400: 0.68 0.03 72;
+  --secondary-500: 0.58 0.034 70;
+  --secondary-600: 0.48 0.028 68;
+  --secondary-700: 0.38 0.022 66;
+  --secondary-800: 0.28 0.016 64;
+  --secondary-900: 0.19 0.01 62;
+  --secondary-950: 0.12 0.006 60;
+}
+
+body {
+  font-family: var(--font-body);
+  color: oklch(var(--foreground-950));
+  background-color: oklch(var(--background-50));
+}
