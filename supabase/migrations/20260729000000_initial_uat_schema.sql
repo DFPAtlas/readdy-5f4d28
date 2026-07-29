@@ -25,7 +25,7 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
   SELECT coalesce(
-    (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') = 'staff',
+    (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'role') IN ('staff', 'admin'),
     false
   );
 $$;
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.uat_projects (
   id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name          text NOT NULL,
   description   text,
-  approved_base_urls text[] NOT NULL DEFAULT '',
+  approved_base_urls text[] NOT NULL DEFAULT '{}'::text[],
   environment   text NOT NULL DEFAULT 'uat'
                 CHECK (environment IN ('demo', 'uat', 'staging', 'production')),
   enabled       boolean NOT NULL DEFAULT true,

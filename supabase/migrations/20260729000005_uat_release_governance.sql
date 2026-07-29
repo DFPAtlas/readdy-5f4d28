@@ -50,11 +50,11 @@ CREATE TABLE IF NOT EXISTS uat_release_candidates (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_release_candidates_status ON uat_release_candidates(status);
-CREATE INDEX idx_release_candidates_project ON uat_release_candidates(project_id);
-CREATE INDEX idx_release_candidates_test_run ON uat_release_candidates(test_run_id);
-CREATE INDEX idx_release_candidates_git_sha ON uat_release_candidates(application_git_sha);
-CREATE INDEX idx_release_candidates_created_at ON uat_release_candidates(created_at);
+CREATE INDEX IF NOT EXISTS idx_release_candidates_status ON uat_release_candidates(status);
+CREATE INDEX IF NOT EXISTS idx_release_candidates_project ON uat_release_candidates(project_id);
+CREATE INDEX IF NOT EXISTS idx_release_candidates_test_run ON uat_release_candidates(test_run_id);
+CREATE INDEX IF NOT EXISTS idx_release_candidates_git_sha ON uat_release_candidates(application_git_sha);
+CREATE INDEX IF NOT EXISTS idx_release_candidates_created_at ON uat_release_candidates(created_at);
 
 -- ----------------------------------------------------------
 -- 2. uat_release_approvals
@@ -86,10 +86,10 @@ CREATE TABLE IF NOT EXISTS uat_release_approvals (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_release_approvals_candidate ON uat_release_approvals(release_candidate_id);
-CREATE INDEX idx_release_approvals_decision ON uat_release_approvals(decision);
-CREATE INDEX idx_release_approvals_expires ON uat_release_approvals(expires_at);
-CREATE INDEX idx_release_approvals_approved_by ON uat_release_approvals(approved_by);
+CREATE INDEX IF NOT EXISTS idx_release_approvals_candidate ON uat_release_approvals(release_candidate_id);
+CREATE INDEX IF NOT EXISTS idx_release_approvals_decision ON uat_release_approvals(decision);
+CREATE INDEX IF NOT EXISTS idx_release_approvals_expires ON uat_release_approvals(expires_at);
+CREATE INDEX IF NOT EXISTS idx_release_approvals_approved_by ON uat_release_approvals(approved_by);
 
 -- ----------------------------------------------------------
 -- 3. uat_risk_acceptances
@@ -116,10 +116,10 @@ CREATE TABLE IF NOT EXISTS uat_risk_acceptances (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_risk_acceptances_candidate ON uat_risk_acceptances(release_candidate_id);
-CREATE INDEX idx_risk_acceptances_bug ON uat_risk_acceptances(bug_id);
-CREATE INDEX idx_risk_acceptances_status ON uat_risk_acceptances(status);
-CREATE INDEX idx_risk_acceptances_expires ON uat_risk_acceptances(expires_at);
+CREATE INDEX IF NOT EXISTS idx_risk_acceptances_candidate ON uat_risk_acceptances(release_candidate_id);
+CREATE INDEX IF NOT EXISTS idx_risk_acceptances_bug ON uat_risk_acceptances(bug_id);
+CREATE INDEX IF NOT EXISTS idx_risk_acceptances_status ON uat_risk_acceptances(status);
+CREATE INDEX IF NOT EXISTS idx_risk_acceptances_expires ON uat_risk_acceptances(expires_at);
 
 -- ----------------------------------------------------------
 -- 4. uat_release_gate_checks
@@ -146,9 +146,9 @@ CREATE TABLE IF NOT EXISTS uat_release_gate_checks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_gate_checks_candidate ON uat_release_gate_checks(release_candidate_id);
-CREATE INDEX idx_gate_checks_type ON uat_release_gate_checks(check_type);
-CREATE INDEX idx_gate_checks_status ON uat_release_gate_checks(status);
+CREATE INDEX IF NOT EXISTS idx_gate_checks_candidate ON uat_release_gate_checks(release_candidate_id);
+CREATE INDEX IF NOT EXISTS idx_gate_checks_type ON uat_release_gate_checks(check_type);
+CREATE INDEX IF NOT EXISTS idx_gate_checks_status ON uat_release_gate_checks(status);
 
 -- ----------------------------------------------------------
 -- 5. Updated-at triggers
@@ -192,19 +192,19 @@ ALTER TABLE uat_risk_acceptances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE uat_release_gate_checks ENABLE ROW LEVEL SECURITY;
 
 -- Staff can read all release data
-CREATE POLICY read_release_candidates ON uat_release_candidates FOR SELECT USING (true);
-CREATE POLICY read_release_approvals ON uat_release_approvals FOR SELECT USING (true);
-CREATE POLICY read_risk_acceptances ON uat_risk_acceptances FOR SELECT USING (true);
-CREATE POLICY read_gate_checks ON uat_release_gate_checks FOR SELECT USING (true);
+CREATE POLICY read_release_candidates ON uat_release_candidates FOR SELECT TO authenticated USING (public.is_staff_user());
+CREATE POLICY read_release_approvals ON uat_release_approvals FOR SELECT TO authenticated USING (public.is_staff_user());
+CREATE POLICY read_risk_acceptances ON uat_risk_acceptances FOR SELECT TO authenticated USING (public.is_staff_user());
+CREATE POLICY read_gate_checks ON uat_release_gate_checks FOR SELECT TO authenticated USING (public.is_staff_user());
 
 -- Only authorised staff can insert/update release data
 -- (Actual permission enforcement happens server-side via API routes)
-CREATE POLICY insert_release_candidates ON uat_release_candidates FOR INSERT WITH CHECK (true);
-CREATE POLICY update_release_candidates ON uat_release_candidates FOR UPDATE USING (true);
-CREATE POLICY insert_release_approvals ON uat_release_approvals FOR INSERT WITH CHECK (true);
-CREATE POLICY update_release_approvals ON uat_release_approvals FOR UPDATE USING (true);
-CREATE POLICY insert_risk_acceptances ON uat_risk_acceptances FOR INSERT WITH CHECK (true);
-CREATE POLICY update_risk_acceptances ON uat_risk_acceptances FOR UPDATE USING (true);
-CREATE POLICY insert_gate_checks ON uat_release_gate_checks FOR INSERT WITH CHECK (true);
+CREATE POLICY insert_release_candidates ON uat_release_candidates FOR INSERT TO authenticated WITH CHECK (public.is_staff_user());
+CREATE POLICY update_release_candidates ON uat_release_candidates FOR UPDATE TO authenticated USING (public.is_staff_user()) WITH CHECK (public.is_staff_user());
+CREATE POLICY insert_release_approvals ON uat_release_approvals FOR INSERT TO authenticated WITH CHECK (public.is_staff_admin());
+CREATE POLICY update_release_approvals ON uat_release_approvals FOR UPDATE TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
+CREATE POLICY insert_risk_acceptances ON uat_risk_acceptances FOR INSERT TO authenticated WITH CHECK (public.is_staff_admin());
+CREATE POLICY update_risk_acceptances ON uat_risk_acceptances FOR UPDATE TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
+CREATE POLICY insert_gate_checks ON uat_release_gate_checks FOR INSERT TO authenticated WITH CHECK (public.is_staff_admin());
 
 COMMIT;

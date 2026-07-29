@@ -152,7 +152,17 @@ function validateUpload(params) {
 }
 
 function generatePath(projectId, runId, journeyId, category, filename) {
-  if (!projectId || !runId) return { path: '', error: 'EVIDENCE_PATH_INVALID' };
+  if (!projectId || !runId || !filename) {
+    return { path: '', error: 'EVIDENCE_PATH_INVALID' };
+  }
+
+  if (
+    filename.includes('/')
+    || UNSAFE_SEGMENTS.some((segment) => filename.includes(segment))
+  ) {
+    return { path: '', error: 'EVIDENCE_PATH_INVALID' };
+  }
+
   const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.')).toLowerCase() : '';
   if (BLOCKED_EXTENSIONS.has(ext)) return { path: '', error: 'EVIDENCE_TYPE_NOT_ALLOWED' };
 
@@ -449,7 +459,9 @@ async function runTests() {
     assertEqual(storageOrphans.length, 2, '2 storage orphans');
     assertEqual(recordOrphans.length, 0, '0 record orphans');
 
-    const tempOrphans = storageOrphans.filter((p) => p.includes('/temp/'));
+    const tempOrphans = storageOrphans.filter(
+      (p) => p.startsWith('temp/') || p.includes('/temp/'),
+    );
     assertEqual(tempOrphans.length, 1, '1 temp-prefix orphan');
   });
 
