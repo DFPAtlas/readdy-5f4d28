@@ -108,7 +108,14 @@ export default function UatAgentPage() {
   const dbState = getServiceStatus('supabase');
   const aiState = getServiceStatus('ai');
 
-  const environment: UatEnvironment = 'uat';
+  const configuredEnvironment = import.meta.env.VITE_PUBLIC_UAT_ENVIRONMENT;
+  const environment: UatEnvironment =
+    configuredEnvironment === 'demo' ||
+    configuredEnvironment === 'uat' ||
+    configuredEnvironment === 'staging' ||
+    configuredEnvironment === 'production'
+      ? configuredEnvironment
+      : 'uat';
   const mockActive = isMockModeActive();
 
   const environmentBadgeStyles: Record<UatEnvironment, string> = {

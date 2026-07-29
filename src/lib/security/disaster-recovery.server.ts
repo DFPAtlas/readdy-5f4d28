@@ -521,7 +521,7 @@ export function completeRestoreTest(
   // Update parent backup run
   const run = store.getRun(test.backupRunId);
   if (run) {
-    run.restoreTestStatus = params.passed ? 'restore_test_passed' : 'restore_test_failed';
+    run.restoreTestStatus = params.passed ? 'passed' : 'failed';
     run.restoreTestedAt = new Date();
     run.restoreTestEnvironment = test.testEnvironment;
     store.addRun(run);
@@ -761,7 +761,7 @@ export function updateDRStatus(params: {
     component: params.component,
     readinessStatus: params.readinessStatus,
     latestBackupAt: params.latestBackupAt,
-    latestVerifiedAt: params.latestVerifiedAt,
+    latestVerifiedBackupAt: params.latestVerifiedAt,
     latestRestoreTestAt: params.latestRestoreTestAt,
     backupAgeSeconds: params.backupAgeSeconds,
     targetRpoSeconds,
@@ -823,7 +823,7 @@ export function generateRecoveryReport(components: string[]): RecoveryReadinessR
 
     componentStatuses.push(status);
     latestBackupByComponent[comp] = status.latestBackupAt?.toISOString() || null;
-    latestVerifiedByComponent[comp] = status.latestVerifiedAt?.toISOString() || null;
+    latestVerifiedByComponent[comp] = status.latestVerifiedBackupAt?.toISOString() || null;
     latestRestoreTestByComponent[comp] = status.latestRestoreTestAt?.toISOString() || null;
 
     if (status.readinessStatus !== 'ready' && status.readinessStatus !== 'ready_with_warnings') {

@@ -727,8 +727,81 @@ const mockStepResults: UatStepResult[] = [
   },
 ];
 
+const mockJourneyRecoveryDefaults = {
+  heartbeatAt: null,
+  leaseExpiresAt: null,
+  attemptCount: 1,
+  maximumAttempts: 2,
+  lastStepIndex: 0,
+  lastCompletedStepId: null,
+  lastSafeCheckpoint: null,
+  recoverable: true,
+  interruptionReason: null,
+  workerInstanceId: null,
+} satisfies Pick<
+  UatJourneyResult,
+  | 'heartbeatAt'
+  | 'leaseExpiresAt'
+  | 'attemptCount'
+  | 'maximumAttempts'
+  | 'lastStepIndex'
+  | 'lastCompletedStepId'
+  | 'lastSafeCheckpoint'
+  | 'recoverable'
+  | 'interruptionReason'
+  | 'workerInstanceId'
+>;
+
+const mockRunRecoveryDefaults = {
+  heartbeatAt: null,
+  leaseAcquiredAt: null,
+  leaseExpiresAt: null,
+  lastProgressAt: null,
+  lastWorkerContactAt: null,
+  lastCallbackAt: null,
+  attemptCount: 1,
+  maximumAttempts: 2,
+  recoveryCount: 0,
+  lastErrorCode: null,
+  lastErrorMessage: null,
+  recoverable: true,
+  recoveryStatus: null,
+  recoveryRequestedAt: null,
+  recoveryRequestedBy: null,
+  interruptedAt: null,
+  interruptionReason: null,
+  cancelRequestedAt: null,
+  cancelledAt: null,
+  workerInstanceId: null,
+  n8nExecutionId: null,
+} satisfies Pick<
+  UatTestRun,
+  | 'heartbeatAt'
+  | 'leaseAcquiredAt'
+  | 'leaseExpiresAt'
+  | 'lastProgressAt'
+  | 'lastWorkerContactAt'
+  | 'lastCallbackAt'
+  | 'attemptCount'
+  | 'maximumAttempts'
+  | 'recoveryCount'
+  | 'lastErrorCode'
+  | 'lastErrorMessage'
+  | 'recoverable'
+  | 'recoveryStatus'
+  | 'recoveryRequestedAt'
+  | 'recoveryRequestedBy'
+  | 'interruptedAt'
+  | 'interruptionReason'
+  | 'cancelRequestedAt'
+  | 'cancelledAt'
+  | 'workerInstanceId'
+  | 'n8nExecutionId'
+>;
+
 export const mockJourneyResults: UatJourneyResult[] = [
   {
+    ...mockJourneyRecoveryDefaults,
     id: 'jr-login',
     runId: 'run-active',
     journeyId: 'journey-login',
@@ -752,6 +825,7 @@ export const mockJourneyResults: UatJourneyResult[] = [
 // ============================================================
 
 export const mockActiveRun: UatTestRun = {
+  ...mockRunRecoveryDefaults,
   id: 'run-active',
   projectId: 'proj-dfp-tester',
   projectName: 'DFP Tester Application',
@@ -785,6 +859,7 @@ export const mockActiveRun: UatTestRun = {
 };
 
 export const mockPassedRun: UatTestRun = {
+  ...mockRunRecoveryDefaults,
   id: 'run-smoke-latest',
   projectId: 'proj-dfp-tester',
   projectName: 'DFP Tester Application',
@@ -818,6 +893,7 @@ export const mockPassedRun: UatTestRun = {
 };
 
 export const mockFailedRun: UatTestRun = {
+  ...mockRunRecoveryDefaults,
   id: 'run-failed-release',
   projectId: 'proj-dfp-tester',
   projectName: 'DFP Tester Application',
@@ -855,6 +931,7 @@ export const mockRecentRuns: UatTestRun[] = [
   mockPassedRun,
   mockFailedRun,
   {
+    ...mockRunRecoveryDefaults,
     id: 'run-portal-smoke',
     projectId: 'proj-dfp-portal',
     projectName: 'DFP Client Portal',
@@ -887,6 +964,7 @@ export const mockRecentRuns: UatTestRun[] = [
     timeline: [],
   },
   {
+    ...mockRunRecoveryDefaults,
     id: 'run-api-smoke',
     projectId: 'proj-dfp-api',
     projectName: 'DFP API Gateway',

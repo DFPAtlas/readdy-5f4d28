@@ -26,7 +26,7 @@ function aiStatusLabel(status: ConnectionStatus['status'], message: string): str
   if (status === 'offline') return 'Offline';
   if (status === 'not_configured') return 'Not Configured';
   if (status === 'checking') return 'Checking';
-  return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  return 'Unknown';
 }
 
 export default function ConnectionDetailsPanel({ connections, selectedServiceKey, onClose, onRetry, checking }: Props) {

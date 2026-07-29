@@ -10,6 +10,10 @@ const typeLabels: Record<UatEvidenceType, { label: string; icon: string }> = {
   network_log: { label: 'Network Log', icon: 'ri-wifi-line' },
   accessibility: { label: 'Accessibility', icon: 'ri-shield-check-line' },
   visual_diff: { label: 'Visual Diff', icon: 'ri-contrast-2-line' },
+  accessibility_report: { label: 'Accessibility Report', icon: 'ri-file-shield-2-line' },
+  uat_report: { label: 'UAT Report', icon: 'ri-file-chart-line' },
+  temporary_file: { label: 'Temporary File', icon: 'ri-file-warning-line' },
+  other: { label: 'Other Evidence', icon: 'ri-attachment-2' },
 };
 
 export default function EvidenceTab() {

@@ -37,6 +37,7 @@ export type VerificationResult =
   | 'missing_request_id';
 
 export interface SigningHeaders {
+  [headerName: string]: string;
   'X-UAT-Signature-Version': string;
   'X-UAT-Timestamp': string;
   'X-UAT-Request-ID': string;
