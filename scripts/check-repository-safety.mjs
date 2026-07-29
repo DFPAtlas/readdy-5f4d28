@@ -17,6 +17,7 @@
 
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import ts from 'typescript';
 
 // --- Configuration -------------------------------------------------
 
@@ -84,10 +85,10 @@ const SERVER_ONLY_VARIABLES = [
 
 const CLIENT_FILE_INDICATORS = [
   /"use client"/,
-  /NEXT_PUBLIC_/g,
-  /VITE_PUBLIC_/g,
-  /import\.meta\.env/g,
-  /window\./g,
+  /NEXT_PUBLIC_/,
+  /VITE_PUBLIC_/,
+  /import\.meta\.env/,
+  /window\./,
 ];
 
 const LEGITIMATE_SERVER_ONLY_FILES = [
@@ -98,6 +99,10 @@ const LEGITIMATE_SERVER_ONLY_FILES = [
   'README-SECURITY.md',
   'README-N8N-UAT.md',
   'project_plan.md',
+
+  // Vite configuration executes in Node.js and is not bundled
+  // into browser-facing application code.
+  'vite.config.ts',
 ];
 
 // --- Helpers -------------------------------------------------------
@@ -114,6 +119,55 @@ function isAllowedExample(filename) {
 function redactSecret(match) {
   if (match.length <= 10) return '***';
   return match.slice(0, 4) + '...' + match.slice(-2);
+}
+
+function getScriptKind(file) {
+  if (file.endsWith('.tsx')) return ts.ScriptKind.TSX;
+  if (file.endsWith('.ts')) return ts.ScriptKind.TS;
+  if (file.endsWith('.jsx')) return ts.ScriptKind.JSX;
+  if (file.endsWith('.mjs')) return ts.ScriptKind.JS;
+  if (file.endsWith('.js')) return ts.ScriptKind.JS;
+  return ts.ScriptKind.Unknown;
+}
+
+function findServerOnlyVariableReferences(file, content) {
+  const sourceFile = ts.createSourceFile(
+    file,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    getScriptKind(file),
+  );
+
+  const configuredVariables = new Set(SERVER_ONLY_VARIABLES);
+  const references = new Set();
+
+  function visit(node) {
+    // Detect actual identifiers while ignoring variable names that
+    // appear only inside comments, labels or troubleshooting text.
+    if (ts.isIdentifier(node) && configuredVariables.has(node.text)) {
+      references.add(node.text);
+    }
+
+    // Also detect computed environment access such as:
+    // process.env['UAT_WEBHOOK_SECRET']
+    if (
+      ts.isElementAccessExpression(node)
+      && ts.isStringLiteralLike(node.argumentExpression)
+      && configuredVariables.has(node.argumentExpression.text)
+    ) {
+      const owner = node.expression.getText(sourceFile);
+
+      if (owner === 'process.env' || owner === 'import.meta.env') {
+        references.add(node.argumentExpression.text);
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return [...references];
 }
 
 // --- Main ----------------------------------------------------------
@@ -229,17 +283,22 @@ for (const file of files) {
   const isClientFile = CLIENT_FILE_INDICATORS.some((pattern) => pattern.test(content));
   if (!isClientFile) continue;
 
-  for (const varName of SERVER_ONLY_VARIABLES) {
-    const regex = new RegExp(`\\b${varName}\\b`, 'g');
-    const matches = content.match(regex);
-    if (matches) {
-      issues++;
-      serverVarHits++;
-      console.error(`  [HIGH] ${file} — server-only variable "${varName}" found in client file`);
-      console.error(`         This variable should never appear in browser-facing code.`);
-      console.error(`         Remove the import/reference or move the code to a server-only module.`);
-      console.error('');
-    }
+  const variableReferences =
+    findServerOnlyVariableReferences(file, content);
+
+  for (const varName of variableReferences) {
+    issues++;
+    serverVarHits++;
+    console.error(
+      `  [HIGH] ${file} — server-only variable "${varName}" found in client file`,
+    );
+    console.error(
+      '         This variable should never appear in browser-facing code.',
+    );
+    console.error(
+      '         Remove the reference or move the code to a server-only module.',
+    );
+    console.error('');
   }
 }
 
