@@ -221,7 +221,7 @@ export async function fetchTestRuns(filters?: {
   const client = getClient();
   let query = client
     .from('uat_test_runs')
-    .select('id, project_id, plan_id, triggered_by, environment, build_reference, status, test_mode, browsers, viewports, safety_snapshot, start_time, end_time, duration_ms, progress, total_steps, passed_count, failed_count, warning_count, blocked_count, pass_rate, bugs_found, readiness_score, n8n_execution_ref, browser_worker_ref, created_at, updated_at')
+    .select('id, project_id, plan_id, triggered_by, environment, build_reference, status, test_mode, browsers, viewports, safety_snapshot, start_time, end_time, duration_ms, current_journey_id, current_step_id, progress, total_steps, passed_count, failed_count, warning_count, blocked_count, pass_rate, bugs_found, readiness_score, n8n_execution_ref, browser_worker_ref, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (filters?.status) query = query.eq('status', filters.status);

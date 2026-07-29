@@ -127,20 +127,25 @@ function buildApiErrorMessage(response: ApiErrorResponse, status: number): strin
 // Live request
 // ============================================================
 
-async function liveRequest<T>(path: string, fetchOptions?: Record<string, unknown>): Promise<T> {
+async function liveRequest<T>(
+  path: string,
+  fetchOptions?: Parameters<typeof fetch>[1]
+): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
   const startTime = performance.now();
   try {
+    const headers = new Headers(fetchOptions?.headers);
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
     const response = await fetch(url, {
       ...fetchOptions,
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(fetchOptions?.headers || {}),
-      },
+      headers,
     });
     clearTimeout(timeoutId);
     const duration = Math.round(performance.now() - startTime);
@@ -201,15 +206,24 @@ export async function getTestPlan(id: string): Promise<UatTestPlan | null> {
 
 export async function createTestPlan(payload: CreateTestPlanPayload): Promise<UatTestPlan> {
   if (useMock) {
+    const now = new Date().toISOString();
+    const planId = `plan-${Date.now()}`;
+
     const newPlan: UatTestPlan = {
-      id: `plan-${Date.now()}`,
+      id: planId,
       name: payload.name,
       projectId: payload.projectId,
       projectName: payload.projectId,
       baseEnvironment: payload.baseEnvironment,
-      journeys: [],
-      devices: payload.devices.map((d) => d as import('@/types/uat').UatViewport),
-      browsers: payload.browsers.map((b) => b as import('@/types/uat').UatBrowser),
+      journeys: payload.journeys.map((journey, index) => ({
+        ...journey,
+        id: `${planId}-journey-${index + 1}`,
+        planId,
+        createdAt: now,
+        updatedAt: now,
+      })),
+      devices: payload.devices,
+      browsers: payload.browsers,
       retryCount: payload.retryCount,
       stopOnCritical: payload.stopOnCritical,
       notificationRules: payload.notificationRules,
@@ -217,8 +231,8 @@ export async function createTestPlan(payload: CreateTestPlanPayload): Promise<Ua
       lastRunId: null,
       lastRunDate: null,
       lastPassRate: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
     return mockRequest(newPlan);
   }
@@ -232,7 +246,29 @@ export async function updateTestPlan(id: string, payload: UpdateTestPlanPayload)
   if (useMock) {
     const plan = mockTestPlans.find((p) => p.id === id);
     if (!plan) throw new Error('Test plan not found');
-    const updated = { ...plan, ...payload, updatedAt: new Date().toISOString() };
+
+    const now = new Date().toISOString();
+    const { id: _payloadId, journeys, ...updates } = payload;
+
+    const updated: UatTestPlan = {
+      ...plan,
+      ...updates,
+      id: plan.id,
+      journeys: journeys
+        ? journeys.map((journey, index) => {
+            const existingJourney = plan.journeys[index];
+            return {
+              ...journey,
+              id: existingJourney?.id ?? `${plan.id}-journey-${index + 1}`,
+              planId: plan.id,
+              createdAt: existingJourney?.createdAt ?? now,
+              updatedAt: now,
+            };
+          })
+        : plan.journeys,
+      updatedAt: now,
+    };
+
     return mockRequest(updated);
   }
   return liveRequest<UatTestPlan>(`/test-plans/${id}`, {
@@ -259,7 +295,7 @@ export async function createUatRun(payload: CreateUatRunPayload): Promise<UatTes
       viewports: payload.viewports,
       releaseReference: payload.releaseReference,
       triggeredBy: 'Current User',
-      status: 'pending',
+      status: 'queued',
       startTime: new Date().toISOString(),
       endTime: null,
       duration: 0,
@@ -277,6 +313,27 @@ export async function createUatRun(payload: CreateUatRunPayload): Promise<UatTes
       agentStatuses: [],
       safetyPolicy: payload.safetyPolicy,
       timeline: [],
+      heartbeatAt: null,
+      leaseAcquiredAt: null,
+      leaseExpiresAt: null,
+      lastProgressAt: null,
+      lastWorkerContactAt: null,
+      lastCallbackAt: null,
+      attemptCount: 0,
+      maximumAttempts: 2,
+      recoveryCount: 0,
+      lastErrorCode: null,
+      lastErrorMessage: null,
+      recoverable: true,
+      recoveryStatus: null,
+      recoveryRequestedAt: null,
+      recoveryRequestedBy: null,
+      interruptedAt: null,
+      interruptionReason: null,
+      cancelRequestedAt: null,
+      cancelledAt: null,
+      workerInstanceId: null,
+      n8nExecutionId: null,
     };
     return mockRequest(newRun, 800);
   }
@@ -315,7 +372,7 @@ export async function retestRun(runId: string, options?: { journeyIds?: string[]
     const retest = {
       ...run,
       id: `run-${Date.now()}`,
-      status: 'pending' as const,
+      status: 'queued' as const,
       startTime: new Date().toISOString(),
       endTime: null,
       progress: 0,

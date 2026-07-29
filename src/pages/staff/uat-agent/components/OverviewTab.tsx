@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import type { UatDashboard, UatTimelineEvent, UatAgentStatus } from '@/types/uat';
-import { isMockMode } from '@/services/uatAgentService';
+import type { UatDashboard } from '@/types/uat';
 import ActiveRunPanel from './ActiveRunPanel';
 import AgentTeamPanel from './AgentTeamPanel';
 import ReleaseReadinessCard from './ReleaseReadinessCard';

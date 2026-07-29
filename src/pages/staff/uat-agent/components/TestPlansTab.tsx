@@ -1,14 +1,41 @@
 import { useState, useEffect } from 'react';
-import type { UatTestPlan, UatJourney, UatJourneyStep, UatStepType } from '@/types/uat';
+import type {
+  UatTestPlan,
+  UatJourney,
+  UatJourneyStep,
+  UatStepType,
+  UatEnvironment,
+  UatViewport,
+  UatBrowser,
+} from '@/types/uat';
 import { listTestPlans, createTestPlan, updateTestPlan } from '@/services/uatAgentService';
 import JourneyBuilder from './JourneyBuilder';
+
+const UAT_ENVIRONMENTS = [
+  'demo',
+  'uat',
+  'staging',
+  'production',
+] as const satisfies readonly UatEnvironment[];
+
+const UAT_VIEWPORTS = [
+  'desktop',
+  'tablet',
+  'mobile',
+] as const satisfies readonly UatViewport[];
+
+const UAT_BROWSERS = [
+  'chromium',
+  'firefox',
+  'webkit',
+] as const satisfies readonly UatBrowser[];
 
 interface EditorData {
   name: string;
   projectId: string;
-  baseEnvironment: string;
-  devices: string[];
-  browsers: string[];
+  baseEnvironment: UatEnvironment;
+  devices: UatViewport[];
+  browsers: UatBrowser[];
   retryCount: number;
   stopOnCritical: boolean;
 }
@@ -204,7 +231,18 @@ export default function TestPlansTab() {
                   <label className="block text-xs font-medium text-foreground-700 mb-1">Environment</label>
                   <select
                     value={editorData.baseEnvironment}
-                    onChange={(e) => setEditorData({ ...editorData, baseEnvironment: e.target.value })}
+                    onChange={(e) => {
+                      const environment = UAT_ENVIRONMENTS.find(
+                        (value) => value === e.target.value
+                      );
+
+                      if (environment) {
+                        setEditorData({
+                          ...editorData,
+                          baseEnvironment: environment,
+                        });
+                      }
+                    }}
                     className="w-full px-3 py-1.5 text-sm border border-background-200/70 rounded-md focus:outline-none focus:border-primary-300 cursor-pointer"
                   >
                     <option value="demo">Demo</option>
@@ -218,7 +256,7 @@ export default function TestPlansTab() {
               <div>
                 <label className="block text-xs font-medium text-foreground-700 mb-1">Devices</label>
                 <div className="flex flex-wrap gap-2">
-                  {['desktop', 'tablet', 'mobile'].map((d) => (
+                  {UAT_VIEWPORTS.map((d) => (
                     <label key={d} className="inline-flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -241,7 +279,7 @@ export default function TestPlansTab() {
               <div>
                 <label className="block text-xs font-medium text-foreground-700 mb-1">Browsers</label>
                 <div className="flex flex-wrap gap-2">
-                  {['chromium', 'firefox', 'webkit'].map((b) => (
+                  {UAT_BROWSERS.map((b) => (
                     <label key={b} className="inline-flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"

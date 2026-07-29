@@ -14,6 +14,8 @@ interface LogEntry {
   requestId?: string;
   route?: string;
   service?: string;
+  runId?: string;
+  status?: string;
   errorCode?: string;
   duration?: number;
   message: string;
@@ -74,6 +76,8 @@ function formatEntry(entry: LogEntry): string {
   if (entry.requestId) parts.push(`[${entry.requestId}]`);
   if (entry.route) parts.push(`[${entry.route}]`);
   if (entry.service) parts.push(`[${entry.service}]`);
+  if (entry.runId) parts.push(`[run:${entry.runId}]`);
+  if (entry.status) parts.push(`[status:${entry.status}]`);
   if (entry.errorCode) parts.push(`[${entry.errorCode}]`);
   if (entry.duration !== undefined) parts.push(`(${entry.duration}ms)`);
   parts.push(entry.message);
@@ -87,6 +91,8 @@ function log(level: LogLevel, message: string, extra?: Partial<LogEntry>): void 
     requestId: extra?.requestId || currentRequestId || undefined,
     route: extra?.route,
     service: extra?.service,
+    runId: extra?.runId,
+    status: extra?.status,
     errorCode: extra?.errorCode,
     duration: extra?.duration,
     message,
