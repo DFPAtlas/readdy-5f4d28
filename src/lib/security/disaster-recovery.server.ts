@@ -9,7 +9,7 @@
 // or private file contents.
 // ============================================================
 
-import { createRequestId } from './request-signing.server';
+import { createRequestId } from './request-signing.server.ts';
 
 // ============================================================
 // Types
