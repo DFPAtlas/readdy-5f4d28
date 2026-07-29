@@ -46,7 +46,8 @@ ALTER TABLE public.uat_bug_evidence
   ADD COLUMN IF NOT EXISTS deletion_approved_by text,
   ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
   ADD COLUMN IF NOT EXISTS deletion_error_code text,
-  ADD COLUMN IF NOT EXISTS last_accessed_at timestamptz;
+  ADD COLUMN IF NOT EXISTS last_accessed_at timestamptz,
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
 -- Rename existing columns where needed (if they differ from new schema)
 DO $$
@@ -136,7 +137,8 @@ CREATE TABLE IF NOT EXISTS public.uat_evidence_cleanup_runs (
   approved_by       text,
   approved_at       timestamptz,
   error_summary     text,
-  created_at        timestamptz NOT NULL DEFAULT now()
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  updated_at        timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_uat_cleanup_runs_status ON public.uat_evidence_cleanup_runs (status);

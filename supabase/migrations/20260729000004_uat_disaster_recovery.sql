@@ -185,7 +185,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Staff can view backup runs' AND tablename = 'uat_backup_runs'
   ) THEN
-    CREATE POLICY "Staff can view backup runs" ON uat_backup_runs FOR SELECT USING (true);
+    CREATE POLICY "Staff can view backup runs" ON uat_backup_runs FOR SELECT TO authenticated USING (public.is_staff_user());
   END IF;
 END
 $$;
@@ -195,7 +195,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Staff can view backup items' AND tablename = 'uat_backup_items'
   ) THEN
-    CREATE POLICY "Staff can view backup items" ON uat_backup_items FOR SELECT USING (true);
+    CREATE POLICY "Staff can view backup items" ON uat_backup_items FOR SELECT TO authenticated USING (public.is_staff_user());
   END IF;
 END
 $$;
@@ -205,7 +205,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Staff can view restore tests' AND tablename = 'uat_restore_tests'
   ) THEN
-    CREATE POLICY "Staff can view restore tests" ON uat_restore_tests FOR SELECT USING (true);
+    CREATE POLICY "Staff can view restore tests" ON uat_restore_tests FOR SELECT TO authenticated USING (public.is_staff_user());
   END IF;
 END
 $$;
@@ -215,7 +215,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Staff can view DR status' AND tablename = 'uat_disaster_recovery_status'
   ) THEN
-    CREATE POLICY "Staff can view DR status" ON uat_disaster_recovery_status FOR SELECT USING (true);
+    CREATE POLICY "Staff can view DR status" ON uat_disaster_recovery_status FOR SELECT TO authenticated USING (public.is_staff_user());
   END IF;
 END
 $$;
@@ -226,7 +226,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Admin can manage backup runs' AND tablename = 'uat_backup_runs'
   ) THEN
-    CREATE POLICY "Admin can manage backup runs" ON uat_backup_runs FOR ALL USING (true);
+    CREATE POLICY "Admin can manage backup runs" ON uat_backup_runs FOR ALL TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
   END IF;
 END
 $$;
@@ -236,7 +236,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Admin can manage backup items' AND tablename = 'uat_backup_items'
   ) THEN
-    CREATE POLICY "Admin can manage backup items" ON uat_backup_items FOR ALL USING (true);
+    CREATE POLICY "Admin can manage backup items" ON uat_backup_items FOR ALL TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
   END IF;
 END
 $$;
@@ -246,7 +246,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Admin can manage restore tests' AND tablename = 'uat_restore_tests'
   ) THEN
-    CREATE POLICY "Admin can manage restore tests" ON uat_restore_tests FOR ALL USING (true);
+    CREATE POLICY "Admin can manage restore tests" ON uat_restore_tests FOR ALL TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
   END IF;
 END
 $$;
@@ -256,7 +256,7 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'Admin can manage DR status' AND tablename = 'uat_disaster_recovery_status'
   ) THEN
-    CREATE POLICY "Admin can manage DR status" ON uat_disaster_recovery_status FOR ALL USING (true);
+    CREATE POLICY "Admin can manage DR status" ON uat_disaster_recovery_status FOR ALL TO authenticated USING (public.is_staff_admin()) WITH CHECK (public.is_staff_admin());
   END IF;
 END
 $$;

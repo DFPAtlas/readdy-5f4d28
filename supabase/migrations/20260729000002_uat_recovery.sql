@@ -44,6 +44,9 @@ ALTER TABLE uat_test_runs
   DROP CONSTRAINT IF EXISTS uat_test_runs_status_check;
 
 ALTER TABLE uat_test_runs
+  ALTER COLUMN status SET DEFAULT 'queued';
+
+ALTER TABLE uat_test_runs
   ADD CONSTRAINT uat_test_runs_status_check CHECK (
     status IN (
       'draft', 'queued', 'starting', 'running',
@@ -117,8 +120,10 @@ CREATE INDEX IF NOT EXISTS idx_uat_worker_hb_status ON uat_worker_heartbeats(sta
 
 CREATE TABLE IF NOT EXISTS uat_recovery_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  run_id TEXT NOT NULL,
-  journey_result_id UUID,
+  run_id UUID NOT NULL
+    REFERENCES public.uat_test_runs(id) ON DELETE CASCADE,
+  journey_result_id UUID
+    REFERENCES public.uat_journey_results(id) ON DELETE SET NULL,
   event_type TEXT NOT NULL,
   detected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   detected_by TEXT NOT NULL DEFAULT 'system',
@@ -145,7 +150,7 @@ ALTER TABLE uat_worker_heartbeats ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Staff can read worker heartbeats" ON uat_worker_heartbeats;
 CREATE POLICY "Staff can read worker heartbeats" ON uat_worker_heartbeats
   FOR SELECT TO authenticated
-  USING (true);
+  USING (public.is_staff_user());
 
 -- Recovery events: read-only for staff, write via service role
 ALTER TABLE uat_recovery_events ENABLE ROW LEVEL SECURITY;
@@ -153,7 +158,7 @@ ALTER TABLE uat_recovery_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Staff can read recovery events" ON uat_recovery_events;
 CREATE POLICY "Staff can read recovery events" ON uat_recovery_events
   FOR SELECT TO authenticated
-  USING (true);
+  USING (public.is_staff_user());
 
 -- ============================================================
 -- 6. Update trigger for uat_worker_heartbeats
